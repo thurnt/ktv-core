@@ -1,11 +1,11 @@
 <?php
 /**
  * Plugin Name: KTV Core
- * Plugin URI: https://example.com/ktv-core
+ * Plugin URI: #
  * Description: Core functionality plugin for KTV system
  * Version: 1.0.0
  * Author: KTV Team
- * Author URI: https://example.com
+ * Author URI: #
  * License: GPL v2 or later
  * License URI: https://www.gnu.org/licenses/gpl-2.0.html
  * Text Domain: ktv-core
