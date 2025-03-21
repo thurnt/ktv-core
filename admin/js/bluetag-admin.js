@@ -49,6 +49,45 @@ jQuery(document).ready(function($) {
         $('input[name="bluetag_api_key"]').val(apiKey);
     });
 
+    // Handle token removal
+    $('.bluetag-token-list').on('click', '.remove-token', function(e) {
+        e.preventDefault();
+        const button = $(this);
+        const token = button.data('token');
+        
+        if (confirm('Are you sure you want to remove this token?')) {
+            $.ajax({
+                url: ajaxurl,
+                type: 'POST',
+                data: {
+                    action: 'remove_bluetag_token',
+                    token: token,
+                    nonce: bluetagSettings.nonce
+                },
+                beforeSend: function() {
+                    button.prop('disabled', true);
+                },
+                success: function(response) {
+                    if (response.success) {
+                        button.closest('tr').fadeOut(400, function() {
+                            $(this).remove();
+                            if ($('.bluetag-token-list tbody tr').length === 0) {
+                                $('.bluetag-token-list tbody').append('<tr><td colspan="7">No tokens found.</td></tr>');
+                            }
+                        });
+                    } else {
+                        alert('Failed to remove token: ' + response.data);
+                        button.prop('disabled', false);
+                    }
+                },
+                error: function() {
+                    alert('An error occurred while removing the token.');
+                    button.prop('disabled', false);
+                }
+            });
+        }
+    });
+
     // Add copy button functionality
     const $apiKeyField = $('input[name="bluetag_api_key"]');
     const $copyButton = $('<button>', {

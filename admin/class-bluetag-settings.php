@@ -10,6 +10,8 @@ class BlueTAG_Settings {
     public static function init() {
         add_action('admin_menu', [self::class, 'add_settings_page']);
         add_action('admin_init', [self::class, 'register_settings']);
+        add_action('wp_ajax_remove_bluetag_token', [self::class, 'handle_token_removal']);
+        add_action('admin_enqueue_scripts', [self::class, 'enqueue_admin_scripts']);
     }
 
     /**
@@ -104,12 +106,21 @@ class BlueTAG_Settings {
     /**
      * Render settings page
      */
-    public static function render_settings_page() {
-        if (!current_user_can('manage_options')) {
+    public static function enqueue_admin_scripts($hook) {
+        if ($hook !== 'settings_page_bluetag-settings') {
             return;
         }
         wp_enqueue_script('bluetag-admin', plugins_url('js/bluetag-admin.js', __FILE__), array('jquery'), '1.0.0', true);
         wp_enqueue_style('bluetag-admin', plugins_url('css/bluetag-admin.css', __FILE__), array(), '1.0.0');
+        wp_localize_script('bluetag-admin', 'bluetagSettings', array(
+            'nonce' => wp_create_nonce('bluetag_token_nonce')
+        ));
+    }
+
+    public static function render_settings_page() {
+        if (!current_user_can('manage_options')) {
+            return;
+        }
         ?>
         <div class="wrap">
             <h1><?php echo esc_html(get_admin_page_title()); ?></h1>
@@ -166,6 +177,36 @@ class BlueTAG_Settings {
         echo '<p class="description">Token expiration time will be calculated based on your <a href="' . admin_url('options-general.php') . '">WordPress timezone settings</a>.</p>';
     }
 
+    /**
+     * Handle token removal via AJAX
+     */
+    public static function handle_token_removal() {
+        check_ajax_referer('bluetag_token_nonce', 'nonce');
+
+        if (!current_user_can('manage_options')) {
+            wp_send_json_error('Insufficient permissions');
+        }
+
+        $token = isset($_POST['token']) ? sanitize_text_field($_POST['token']) : '';
+        if (empty($token)) {
+            wp_send_json_error('Invalid token');
+        }
+
+        global $wpdb;
+        $table_name = $wpdb->prefix . 'bluetag_token';
+        $result = $wpdb->delete(
+            $table_name,
+            array('token' => $token),
+            array('%s')
+        );
+
+        if ($result === false) {
+            wp_send_json_error('Failed to remove token');
+        }
+
+        wp_send_json_success();
+    }
+
     public static function render_token_list() {
         global $wpdb;
         $table_name = $wpdb->prefix . 'bluetag_token';
@@ -181,6 +222,7 @@ class BlueTAG_Settings {
                         <th>User Agent</th>
                         <th>IP Address</th>
                         <th>Last Used</th>
+                        <th>Actions</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -197,6 +239,11 @@ class BlueTAG_Settings {
                                 <td><?php echo esc_html($token->user_agent); ?></td>
                                 <td><?php echo esc_html($token->ip_address); ?></td>
                                 <td><?php echo $token->last_used ? esc_html($token->last_used) : 'Never'; ?></td>
+                                <td>
+                                    <button class="button button-small remove-token" data-token="<?php echo esc_attr($token->token); ?>">
+                                        Remove
+                                    </button>
+                                </td>
                             </tr>
                         <?php endforeach; ?>
                     <?php endif; ?>
