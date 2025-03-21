@@ -1,0 +1,19 @@
+.nav-tab-wrapper {
+    margin-bottom: 20px;
+}
+
+.tab-content {
+    margin-top: 20px;
+}
+
+.bluetag-token-list table {
+    margin-top: 20px;
+}
+
+.bluetag-token-list th {
+    font-weight: 600;
+}
+
+.bluetag-token-list td {
+    vertical-align: middle;
+}

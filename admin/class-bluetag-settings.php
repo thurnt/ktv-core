@@ -100,16 +100,72 @@ class BlueTAG_Settings {
             return;
         }
         wp_enqueue_script('bluetag-admin', plugins_url('js/bluetag-admin.js', __FILE__), array('jquery'), '1.0.0', true);
+        wp_enqueue_style('bluetag-admin', plugins_url('css/bluetag-admin.css', __FILE__), array(), '1.0.0');
         ?>
         <div class="wrap">
             <h1><?php echo esc_html(get_admin_page_title()); ?></h1>
-            <form action="options.php" method="post">
-                <?php
-                settings_fields('bluetag_settings');
-                do_settings_sections('bluetag-settings');
-                submit_button('Save Settings');
-                ?>
-            </form>
+            
+            <nav class="nav-tab-wrapper">
+                <a href="#auth-settings" class="nav-tab nav-tab-active">Authentication Settings</a>
+                <a href="#token-list" class="nav-tab">Token List</a>
+            </nav>
+
+            <div class="tab-content" id="auth-settings">
+                <form action="options.php" method="post">
+                    <?php
+                    settings_fields('bluetag_settings');
+                    do_settings_sections('bluetag-settings');
+                    submit_button('Save Settings');
+                    ?>
+                </form>
+            </div>
+
+            <div class="tab-content" id="token-list" style="display: none;">
+                <?php self::render_token_list(); ?>
+            </div>
+        </div>
+        <?php
+    }
+
+    /**
+     * Render token list table
+     */
+    public static function render_token_list() {
+        global $wpdb;
+        $table_name = $wpdb->prefix . 'bluetag_token';
+        $tokens = $wpdb->get_results("SELECT * FROM {$table_name} ORDER BY created_at DESC");
+        ?>
+        <div class="bluetag-token-list">
+            <table class="wp-list-table widefat fixed striped">
+                <thead>
+                    <tr>
+                        <th>Token</th>
+                        <th>Created At</th>
+                        <th>Expires At</th>
+                        <th>User Agent</th>
+                        <th>IP Address</th>
+                        <th>Last Used</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <?php if (empty($tokens)) : ?>
+                        <tr>
+                            <td colspan="6">No tokens found.</td>
+                        </tr>
+                    <?php else : ?>
+                        <?php foreach ($tokens as $token) : ?>
+                            <tr>
+                                <td><?php echo esc_html(substr($token->token, 0, 16) . '...' . substr($token->token, -16)); ?></td>
+                                <td><?php echo esc_html($token->created_at); ?></td>
+                                <td><?php echo esc_html($token->expires_at); ?></td>
+                                <td><?php echo esc_html($token->user_agent); ?></td>
+                                <td><?php echo esc_html($token->ip_address); ?></td>
+                                <td><?php echo $token->last_used ? esc_html($token->last_used) : 'Never'; ?></td>
+                            </tr>
+                        <?php endforeach; ?>
+                    <?php endif; ?>
+                </tbody>
+            </table>
         </div>
         <?php
     }

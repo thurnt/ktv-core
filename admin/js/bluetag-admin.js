@@ -1,4 +1,18 @@
 jQuery(document).ready(function($) {
+    // Handle tab switching
+    $('.nav-tab').on('click', function(e) {
+        e.preventDefault();
+        const targetId = $(this).attr('href');
+
+        // Update active tab
+        $('.nav-tab').removeClass('nav-tab-active');
+        $(this).addClass('nav-tab-active');
+
+        // Show target content
+        $('.tab-content').hide();
+        $(targetId).show();
+    });
+
     function generateChecksum(str) {
         let hash = 0;
         for (let i = 0; i < str.length; i++) {
