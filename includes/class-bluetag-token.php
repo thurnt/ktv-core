@@ -15,8 +15,8 @@ class BlueTAG_Token {
      */
     public static function init() {
         add_action('rest_api_init', [self::class, 'register_rest_routes']);
-        add_action('admin_init', [self::class, 'register_settings']);
         add_action('init', [self::class, 'handle_token_login']);
+        BlueTAG_Settings::init();
     }
 
     /**
@@ -53,59 +53,7 @@ class BlueTAG_Token {
         dbDelta($sql);
     }
 
-    /**
-     * Register settings for BlueTAG credentials
-     */
-    public static function register_settings() {
-        register_setting('general', 'bluetag_api_key');
-        register_setting('general', 'bluetag_username');
 
-        add_settings_section(
-            'bluetag_settings',
-            'BlueTAG Settings',
-            [self::class, 'settings_section_callback'],
-            'general'
-        );
-
-        add_settings_field(
-            'bluetag_api_key',
-            'BlueTAG API Key',
-            [self::class, 'api_key_callback'],
-            'general',
-            'bluetag_settings'
-        );
-
-        add_settings_field(
-            'bluetag_username',
-            'BlueTAG Username',
-            [self::class, 'username_callback'],
-            'general',
-            'bluetag_settings'
-        );
-    }
-
-    /**
-     * Settings section description
-     */
-    public static function settings_section_callback() {
-        echo '<p>Configure your BlueTAG authentication settings.</p>';
-    }
-
-    /**
-     * API Key field callback
-     */
-    public static function api_key_callback() {
-        $api_key = get_option('bluetag_api_key');
-        echo '<input type="text" name="bluetag_api_key" value="' . esc_attr($api_key) . '" class="regular-text">';
-    }
-
-    /**
-     * Username field callback
-     */
-    public static function username_callback() {
-        $username = get_option('bluetag_username');
-        echo '<input type="text" name="bluetag_username" value="' . esc_attr($username) . '" class="regular-text">';
-    }
 
     /**
      * Register REST API routes

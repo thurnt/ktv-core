@@ -38,7 +38,8 @@ add_action('plugins_loaded', function() {
     // Load text domain for internationalization
     load_plugin_textdomain('ktv-core', false, dirname(plugin_basename(__FILE__)) . '/languages');
     
-    // Initialize BlueTAG token functionality
+    // Initialize BlueTAG functionality
+    require_once KTV_CORE_PLUGIN_DIR . 'admin/class-bluetag-settings.php';
     require_once KTV_CORE_PLUGIN_DIR . 'includes/class-bluetag-token.php';
     BlueTAG_Token::init();
 });
