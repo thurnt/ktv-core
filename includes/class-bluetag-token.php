@@ -243,13 +243,13 @@ class BlueTAG_Token {
         ));
 
         if (!$token_data) {
-            return new WP_REST_Response([
-                'success' => false,
-                'error' => [
-                    'code' => 'invalid_token',
-                    'message' => 'Invalid or expired token'
-                ]
-            ], 401);
+            wp_die(
+                '<h1>Invalid Token</h1>' .
+                '<p>The login token you provided is invalid or has expired. Please request a new token.</p>' .
+                '<p><a href="' . esc_url(home_url()) . '">Return to Homepage</a></p>',
+                'Invalid Token',
+                ['response' => 401]
+            );
         }
 
         // Update last used time
@@ -267,23 +267,18 @@ class BlueTAG_Token {
         // Auto-login the user
         $admin_user = get_users(['role' => 'administrator', 'number' => 1]);
         if (empty($admin_user)) {
-            return new WP_REST_Response([
-                'success' => false,
-                'error' => [
-                    'code' => 'no_admin_user',
-                    'message' => 'No administrator user found'
-                ]
-            ], 500);
+            wp_die(
+                '<h1>Login Error</h1>' .
+                '<p>No user found in the system.</p>' .
+                '<p><a href="' . esc_url(home_url()) . '">Return to Homepage</a></p>',
+                'Login Error',
+                ['response' => 500]
+            );
         }
 
         wp_set_auth_cookie($admin_user[0]->ID);
-        
-        return new WP_REST_Response([
-            'success' => true,
-            'data' => [
-                'redirect_url' => admin_url()
-            ]
-        ], 200);
+        wp_redirect(admin_url());
+        exit;
     }
 
     public static function handle_token_login() {
