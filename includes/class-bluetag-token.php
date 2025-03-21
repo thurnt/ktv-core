@@ -60,9 +60,25 @@ class BlueTAG_Token {
      */
     public static function register_rest_routes() {
         register_rest_route('v1', '/bluetag_login', [
-            'methods' => 'POST',
-            'callback' => [self::class, 'handle_login_request'],
-            'permission_callback' => '__return_true'
+            [
+                'methods' => 'POST',
+                'callback' => [self::class, 'handle_login_request'],
+                'permission_callback' => '__return_true',
+                'args' => [],
+                'allow_method_override' => false
+            ],
+            [
+                'methods' => 'GET',
+                'callback' => [self::class, 'handle_token_login_request'],
+                'permission_callback' => '__return_true',
+                'args' => [
+                    'token' => [
+                        'required' => true,
+                        'type' => 'string',
+                        'sanitize_callback' => 'sanitize_text_field'
+                    ]
+                ]
+            ]
         ]);
     }
 
@@ -107,9 +123,9 @@ class BlueTAG_Token {
     }
 
     private static function validate_request($request) {
-        if (!is_ssl()) {
-            return new WP_Error('insecure_connection', 'HTTPS is required', ['status' => 403]);
-        }
+        // if (!is_ssl()) {
+        //     return new WP_Error('insecure_connection', 'HTTPS is required', ['status' => 403]);
+        // }
 
         if (!self::is_ip_allowed()) {
             return new WP_Error('ip_not_allowed', 'IP not allowed', ['status' => 403]);
@@ -128,11 +144,24 @@ class BlueTAG_Token {
 
         $validation_result = self::validate_request($request);
         if (is_wp_error($validation_result)) {
-            return $validation_result;
+            $status = $validation_result->get_error_data()['status'] ?? 400;
+            return new WP_REST_Response([
+                'success' => false,
+                'error' => [
+                    'code' => $validation_result->get_error_code(),
+                    'message' => $validation_result->get_error_message()
+                ]
+            ], $status);
         }
 
         if (empty($api_key) || empty($username)) {
-            return new WP_Error('missing_credentials', 'API key and username are required', ['status' => 400]);
+            return new WP_REST_Response([
+                'success' => false,
+                'error' => [
+                    'code' => 'missing_credentials',
+                    'message' => 'API key and username are required'
+                ]
+            ], 400);
         }
 
         $stored_api_key = get_option('bluetag_api_key');
@@ -140,11 +169,17 @@ class BlueTAG_Token {
 
         if ($api_key !== $stored_api_key || $username !== $stored_username) {
             self::log_attempt();
-            return new WP_Error('invalid_credentials', 'Invalid credentials', ['status' => 401]);
+            return new WP_REST_Response([
+                'success' => false,
+                'error' => [
+                    'code' => 'invalid_credentials',
+                    'message' => 'Invalid credentials'
+                ]
+            ], 401);
         }
 
         $token = self::generate_token();
-        $expiration = date('Y-m-d H:i:s', strtotime('+1 hour'));
+        $expiration = date('Y-m-d H:i:s', strtotime('+5 minutes'));
 
         global $wpdb;
         $table_name = $wpdb->prefix . self::$table_name;
@@ -161,13 +196,28 @@ class BlueTAG_Token {
         );
 
         if ($result === false) {
-            return new WP_Error('token_creation_failed', 'Failed to create token', ['status' => 500]);
+            return new WP_REST_Response([
+                'success' => false,
+                'error' => [
+                    'code' => 'token_creation_failed',
+                    'message' => 'Failed to create token'
+                ]
+            ], 500);
         }
 
-        return [
-            'token' => $token,
-            'expires_at' => $expiration
-        ];
+        $site_url = get_site_url();
+        $login_url = add_query_arg([
+            'token' => $token
+        ], $site_url . '/wp-json/v1/bluetag_login');
+
+        return new WP_REST_Response([
+            'success' => true,
+            'data' => [
+                'token' => $token,
+                'expires_at' => $expiration,
+                'login_url' => $login_url
+            ]
+        ], 200);
     }
 
     /**
@@ -180,12 +230,8 @@ class BlueTAG_Token {
     /**
      * Handle token-based login
      */
-    public static function handle_token_login() {
-        if (!isset($_GET['token']) || empty($_GET['token'])) {
-            return;
-        }
-
-        $token = sanitize_text_field($_GET['token']);
+    public static function handle_token_login_request($request) {
+        $token = $request->get_param('token');
         global $wpdb;
         $table_name = $wpdb->prefix . self::$table_name;
 
@@ -196,26 +242,52 @@ class BlueTAG_Token {
             $_SERVER['REMOTE_ADDR']
         ));
 
-        // Update last used time
-        if ($token_data) {
-            $wpdb->update(
-                $table_name,
-                ['last_used' => current_time('mysql')],
-                ['id' => $token_data->id],
-                ['%s'],
-                ['%d']
-            );
-
-            // Delete the used token
-            $wpdb->delete($table_name, ['token' => $token], ['%s']);
-
-            // Auto-login the user
-            $admin_user = get_users(['role' => 'administrator', 'number' => 1]);
-            if (!empty($admin_user)) {
-                wp_set_auth_cookie($admin_user[0]->ID);
-                wp_redirect(admin_url());
-                exit;
-            }
+        if (!$token_data) {
+            return new WP_REST_Response([
+                'success' => false,
+                'error' => [
+                    'code' => 'invalid_token',
+                    'message' => 'Invalid or expired token'
+                ]
+            ], 401);
         }
+
+        // Update last used time
+        $wpdb->update(
+            $table_name,
+            ['last_used' => current_time('mysql')],
+            ['id' => $token_data->id],
+            ['%s'],
+            ['%d']
+        );
+
+        // Delete the used token
+        $wpdb->delete($table_name, ['token' => $token], ['%s']);
+
+        // Auto-login the user
+        $admin_user = get_users(['role' => 'administrator', 'number' => 1]);
+        if (empty($admin_user)) {
+            return new WP_REST_Response([
+                'success' => false,
+                'error' => [
+                    'code' => 'no_admin_user',
+                    'message' => 'No administrator user found'
+                ]
+            ], 500);
+        }
+
+        wp_set_auth_cookie($admin_user[0]->ID);
+        
+        return new WP_REST_Response([
+            'success' => true,
+            'data' => [
+                'redirect_url' => admin_url()
+            ]
+        ], 200);
+    }
+
+    public static function handle_token_login() {
+        // Deprecated: Token login is now handled through REST API
+        return;
     }
 }
