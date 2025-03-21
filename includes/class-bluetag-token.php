@@ -179,7 +179,9 @@ class BlueTAG_Token {
         }
 
         $token = self::generate_token();
-        $expiration = date('Y-m-d H:i:s', strtotime('+5 minutes'));
+        $expiration_seconds = get_option('bluetag_token_expiration', 300);
+        $expiration = current_time('mysql', false);
+        $expiration = date('Y-m-d H:i:s', strtotime("+{$expiration_seconds} seconds", strtotime($expiration)));
 
         global $wpdb;
         $table_name = $wpdb->prefix . self::$table_name;

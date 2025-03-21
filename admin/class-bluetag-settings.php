@@ -31,6 +31,7 @@ class BlueTAG_Settings {
     public static function register_settings() {
         register_setting('bluetag_settings', 'bluetag_api_key');
         register_setting('bluetag_settings', 'bluetag_username');
+        register_setting('bluetag_settings', 'bluetag_token_expiration');
 
         add_settings_section(
             'bluetag_settings_section',
@@ -51,6 +52,14 @@ class BlueTAG_Settings {
             'bluetag_username',
             'BlueTAG Username',
             [self::class, 'username_callback'],
+            'bluetag-settings',
+            'bluetag_settings_section'
+        );
+
+        add_settings_field(
+            'bluetag_token_expiration',
+            'Token Expiration Time',
+            [self::class, 'token_expiration_callback'],
             'bluetag-settings',
             'bluetag_settings_section'
         );
@@ -130,6 +139,33 @@ class BlueTAG_Settings {
     /**
      * Render token list table
      */
+    /**
+     * Token expiration field callback
+     */
+    public static function token_expiration_callback() {
+        $expiration = get_option('bluetag_token_expiration', 300); // Default 5 minutes
+        $options = [
+            30 => '30 seconds',
+            60 => '1 minute',
+            120 => '2 minutes',
+            180 => '3 minutes',
+            240 => '4 minutes',
+            300 => '5 minutes'
+        ];
+        
+        echo '<select name="bluetag_token_expiration" class="regular-text">';
+        foreach ($options as $value => $label) {
+            printf(
+                '<option value="%d" %s>%s</option>',
+                $value,
+                selected($expiration, $value, false),
+                esc_html($label)
+            );
+        }
+        echo '</select>';
+        echo '<p class="description">Token expiration time will be calculated based on your <a href="' . admin_url('options-general.php') . '">WordPress timezone settings</a>.</p>';
+    }
+
     public static function render_token_list() {
         global $wpdb;
         $table_name = $wpdb->prefix . 'bluetag_token';
