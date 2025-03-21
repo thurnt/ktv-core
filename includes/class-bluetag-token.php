@@ -123,9 +123,9 @@ class BlueTAG_Token {
     }
 
     private static function validate_request($request) {
-        // if (!is_ssl()) {
-        //     return new WP_Error('insecure_connection', 'HTTPS is required', ['status' => 403]);
-        // }
+        if (!is_ssl()) {
+            return new WP_Error('insecure_connection', 'HTTPS is required', ['status' => 403]);
+        }
 
         if (!self::is_ip_allowed()) {
             return new WP_Error('ip_not_allowed', 'IP not allowed', ['status' => 403]);
@@ -238,8 +238,9 @@ class BlueTAG_Token {
         $table_name = $wpdb->prefix . self::$table_name;
 
         $token_data = $wpdb->get_row($wpdb->prepare(
-            "SELECT * FROM $table_name WHERE token = %s AND expires_at > NOW() AND (user_agent = %s OR user_agent IS NULL) AND (ip_address = %s OR ip_address IS NULL)",
+            "SELECT * FROM $table_name WHERE token = %s AND expires_at > %s AND (user_agent = %s OR user_agent IS NULL) AND (ip_address = %s OR ip_address IS NULL)",
             $token,
+            current_time('mysql', false), 
             $_SERVER['HTTP_USER_AGENT'],
             $_SERVER['REMOTE_ADDR']
         ));

@@ -3,7 +3,7 @@
  * Plugin Name: KTV Core
  * Plugin URI: #
  * Description: Core functionality plugin for KTV system
- * Version: 1.0.0
+ * Version: 1.0.1
  * Author: KTV Team
  * Author URI: #
  * License: GPL v2 or later
