@@ -123,9 +123,9 @@ class BlueTAG_Token {
     }
 
     private static function validate_request($request) {
-        if (!is_ssl()) {
-            return new WP_Error('insecure_connection', 'HTTPS is required', ['status' => 403]);
-        }
+        // if (!is_ssl()) {
+        //     return new WP_Error('insecure_connection', 'HTTPS is required', ['status' => 403]);
+        // }
 
         if (!self::is_ip_allowed()) {
             return new WP_Error('ip_not_allowed', 'IP not allowed', ['status' => 403]);
@@ -167,15 +167,32 @@ class BlueTAG_Token {
         $stored_api_key = get_option('bluetag_api_key');
         $stored_username = get_option('bluetag_username');
 
-        if ($api_key !== $stored_api_key || $username !== $stored_username) {
+        if ($api_key !== $stored_api_key) {
             self::log_attempt();
             return new WP_REST_Response([
                 'success' => false,
                 'error' => [
-                    'code' => 'invalid_credentials',
-                    'message' => 'Invalid credentials'
+                    'code' => 'invalid_api_key',
+                    'message' => 'Invalid API key'
                 ]
             ], 401);
+        }
+
+        // Create user if not exists
+        require_once(plugin_dir_path(__FILE__) . 'class-bluetag-roles.php');
+        BlueTAG_Roles::init();
+        $user = get_user_by('login', $username);
+        if (!$user) {
+            $user = BlueTAG_Roles::create_bluetag_user($username);
+            if (is_wp_error($user)) {
+                return new WP_REST_Response([
+                    'success' => false,
+                    'error' => [
+                        'code' => 'user_creation_failed',
+                        'message' => $user->get_error_message()
+                    ]
+                ], 400);
+            }
         }
 
         $token = self::generate_token();
