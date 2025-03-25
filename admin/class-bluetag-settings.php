@@ -32,6 +32,7 @@ class BlueTAG_Settings {
      */
     public static function register_settings() {
         register_setting('bluetag_settings', 'bluetag_api_key');
+        register_setting('bluetag_settings', 'bluetag_test_api_key');
         register_setting('bluetag_settings', 'bluetag_username');
         register_setting('bluetag_settings', 'bluetag_token_expiration');
 
@@ -46,6 +47,14 @@ class BlueTAG_Settings {
             'bluetag_api_key',
             'BlueTAG API Key',
             [self::class, 'api_key_callback'],
+            'bluetag-settings',
+            'bluetag_settings_section'
+        );
+
+        add_settings_field(
+            'bluetag_test_api_key',
+            'BlueTAG API Key (Testing)',
+            [self::class, 'test_api_key_callback'],
             'bluetag-settings',
             'bluetag_settings_section'
         );
@@ -81,6 +90,16 @@ class BlueTAG_Settings {
         $api_key = get_option('bluetag_api_key');
         echo '<input type="text" name="bluetag_api_key" value="' . esc_attr($api_key) . '" class="regular-text">';
         echo ' <button id="generate-api-key" class="button button-secondary">Generate</button>';
+    }
+
+    /**
+     * Test API Key field callback
+     */
+    public static function test_api_key_callback() {
+        $test_api_key = get_option('bluetag_test_api_key');
+        echo '<input type="text" name="bluetag_test_api_key" value="' . esc_attr($test_api_key) . '" class="regular-text">';
+        echo ' <button id="generate-test-api-key" class="button button-secondary">Generate</button>';
+        echo '<p class="description">Use this API key for testing purposes without affecting production environment.</p>';
     }
 
     /**

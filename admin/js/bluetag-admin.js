@@ -43,10 +43,11 @@ jQuery(document).ready(function($) {
         return baseKey + checksum;
     }
 
-    $('#generate-api-key').on('click', function(e) {
+    $('#generate-api-key, #generate-test-api-key').on('click', function(e) {
         e.preventDefault();
         const apiKey = generateComplexApiKey();
-        $('input[name="bluetag_api_key"]').val(apiKey);
+        const inputName = $(this).attr('id') === 'generate-api-key' ? 'bluetag_api_key' : 'bluetag_test_api_key';
+        $(`input[name="${inputName}"]`).val(apiKey);
     });
 
     // Handle token removal
@@ -88,28 +89,30 @@ jQuery(document).ready(function($) {
         }
     });
 
-    // Add copy button functionality
-    const $apiKeyField = $('input[name="bluetag_api_key"]');
-    const $copyButton = $('<button>', {
-        type: 'button',
-        class: 'button button-secondary',
-        text: 'Copy',
-        css: { marginLeft: '5px' }
-    });
+    // Add copy button functionality for both API key fields
+    $('input[name="bluetag_api_key"], input[name="bluetag_test_api_key"]').each(function() {
+        const $field = $(this);
+        const $copyButton = $('<button>', {
+            type: 'button',
+            class: 'button button-secondary',
+            text: 'Copy',
+            css: { marginLeft: '5px' }
+        });
 
-    $copyButton.insertAfter('#generate-api-key');
+        $copyButton.insertAfter($field.next('.button'));
 
-    $copyButton.on('click', function(e) {
-        e.preventDefault();
-        $apiKeyField[0].select();
-        document.execCommand('copy');
-        
-        const $this = $(this);
-        const originalText = $this.text();
-        $this.text('Copied!');
-        
-        setTimeout(function() {
-            $this.text(originalText);
-        }, 1500);
+        $copyButton.on('click', function(e) {
+            e.preventDefault();
+            $field[0].select();
+            document.execCommand('copy');
+            
+            const $this = $(this);
+            const originalText = $this.text();
+            $this.text('Copied!');
+            
+            setTimeout(function() {
+                $this.text(originalText);
+            }, 1500);
+        });
     });
 });
