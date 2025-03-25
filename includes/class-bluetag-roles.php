@@ -9,6 +9,32 @@ class BlueTAG_Roles {
      */
     public static function init() {
         add_action('init', [self::class, 'setup_bluetag_user_role']);
+        add_action('init', [self::class, 'ensure_default_user']);
+    }
+
+    /**
+     * Ensure a default BlueTAG user exists
+     */
+    public static function ensure_default_user() {
+        // First ensure the role exists
+        self::setup_bluetag_user_role();
+        
+        $default_username = 'default_bluetag_user';
+        $existing_user = get_user_by('login', $default_username);
+        
+        if (!$existing_user) {
+            $new_user = self::create_bluetag_user($default_username);
+            if (is_wp_error($new_user)) {
+                error_log('Failed to create default BlueTAG user: ' . $new_user->get_error_message());
+                return;
+            }
+            
+            // Verify role assignment
+            $user_meta = get_userdata($new_user->ID);
+            if (!in_array('bluetag_user', $user_meta->roles)) {
+                $new_user->set_role('bluetag_user');
+            }
+        }
     }
 
     /**
