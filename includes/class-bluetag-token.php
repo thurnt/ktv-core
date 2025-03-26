@@ -140,7 +140,6 @@ class BlueTAG_Token {
 
     public static function handle_login_request($request) {
         $api_key = $request->get_param('bluetag_api_key');
-        $username = $request->get_param('bluetag_username');
 
         $validation_result = self::validate_request($request);
         if (is_wp_error($validation_result)) {
@@ -154,18 +153,17 @@ class BlueTAG_Token {
             ], $status);
         }
 
-        if (empty($api_key) || empty($username)) {
+        if (empty($api_key)) {
             return new WP_REST_Response([
                 'success' => false,
                 'error' => [
                     'code' => 'missing_credentials',
-                    'message' => 'API key and username are required'
+                    'message' => 'API key is required'
                 ]
             ], 400);
         }
 
         $stored_api_key = get_option('bluetag_api_key');
-        $stored_username = get_option('bluetag_username');
         $test_api_key = get_option('bluetag_test_api_key');
 
         if ($api_key === $test_api_key) {
@@ -179,6 +177,8 @@ class BlueTAG_Token {
                     'message' => 'Invalid API key'
                 ]
             ], 401);
+        } else {
+            $username = 'default_bluetag_user';
         }
 
         // Create user if not exists

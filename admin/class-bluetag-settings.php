@@ -33,7 +33,6 @@ class BlueTAG_Settings {
     public static function register_settings() {
         register_setting('bluetag_settings', 'bluetag_api_key');
         register_setting('bluetag_settings', 'bluetag_test_api_key');
-        register_setting('bluetag_settings', 'bluetag_username');
         register_setting('bluetag_settings', 'bluetag_token_expiration');
 
         add_settings_section(
@@ -59,13 +58,6 @@ class BlueTAG_Settings {
             'bluetag_settings_section'
         );
 
-        add_settings_field(
-            'bluetag_username',
-            'BlueTAG Username',
-            [self::class, 'username_callback'],
-            'bluetag-settings',
-            'bluetag_settings_section'
-        );
 
         add_settings_field(
             'bluetag_token_expiration',
@@ -102,25 +94,6 @@ class BlueTAG_Settings {
         echo '<p class="description">Use this API key for testing purposes without affecting production environment.</p>';
     }
 
-    /**
-     * Username field callback
-     */
-    public static function username_callback() {
-        $username = get_option('bluetag_username');
-        $users = get_users(['fields' => ['ID', 'user_login']]);
-        echo '<select name="bluetag_username" class="regular-text">';
-        echo '<option value="">Select a user</option>';
-        foreach ($users as $user) {
-            $selected = ($username === $user->user_login) ? 'selected' : '';
-            echo sprintf(
-                '<option value="%s" %s>%s</option>',
-                esc_attr($user->user_login),
-                $selected,
-                esc_html($user->user_login)
-            );
-        }
-        echo '</select>';
-    }
 
     /**
      * Render settings page

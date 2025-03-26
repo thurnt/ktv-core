@@ -39,7 +39,6 @@ POST /wp-json/v1/bluetag_login
 
 Parameters:
 - bluetag_api_key: Your BlueTAG API key (required)
-- bluetag_username: Your BlueTAG username (required)
 
 Success Response (HTTP 200):
 {
