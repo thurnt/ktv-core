@@ -3,7 +3,7 @@
  * Plugin Name: KTV Core
  * Plugin URI: #
  * Description: Core functionality plugin for KTV system
- * Version: 1.0.3
+ * Version: 1.0.4
  * Author: KTV Team
  * Author URI: #
  * License: GPL v2 or later
@@ -27,6 +27,7 @@ register_activation_hook(__FILE__, function() {
     require_once KTV_CORE_PLUGIN_DIR . 'includes/class-bluetag-token.php';
     require_once KTV_CORE_PLUGIN_DIR . 'includes/class-bluetag-roles.php';
     BlueTAG_Token::create_table();
+    BlueTAG_Roles::setup_bluetag_user_role();
     BlueTAG_Roles::ensure_default_user();
 });
 
