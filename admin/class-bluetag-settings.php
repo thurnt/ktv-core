@@ -80,7 +80,7 @@ class BlueTAG_Settings {
      */
     public static function api_key_callback() {
         $api_key = get_option('bluetag_api_key');
-        echo '<input type="text" name="bluetag_api_key" value="' . esc_attr($api_key) . '" class="regular-text">';
+        echo '<input type="text" name="bluetag_api_key" value="' . esc_attr($api_key) . '" class="regular-text" readonly>';
         echo ' <button id="generate-api-key" class="button button-secondary">Generate</button>';
     }
 
@@ -89,7 +89,7 @@ class BlueTAG_Settings {
      */
     public static function test_api_key_callback() {
         $test_api_key = get_option('bluetag_test_api_key');
-        echo '<input type="text" name="bluetag_test_api_key" value="' . esc_attr($test_api_key) . '" class="regular-text">';
+        echo '<input type="text" name="bluetag_test_api_key" value="' . esc_attr($test_api_key) . '" class="regular-text" readonly>';
         echo ' <button id="generate-test-api-key" class="button button-secondary">Generate</button>';
         echo '<p class="description">Use this API key for testing purposes without affecting production environment.</p>';
     }
