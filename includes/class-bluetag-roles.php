@@ -68,6 +68,31 @@ class BlueTAG_Roles {
                     'delete_media' => false
                 ]
             );
+        } else {
+            $role->add_cap('edit_posts');
+            $role->add_cap('edit_others_posts');
+            $role->add_cap('edit_published_posts');
+            $role->add_cap('publish_posts');
+            $role->add_cap('delete_posts');
+            $role->add_cap('delete_others_posts');
+            $role->add_cap('delete_published_posts');
+            $role->add_cap('read');
+            
+            $role->add_cap('edit_pages');
+            $role->add_cap('edit_others_pages');
+            $role->add_cap('edit_published_pages');
+            $role->add_cap('publish_pages');
+            $role->add_cap('delete_pages');
+            $role->add_cap('delete_others_pages');
+            $role->add_cap('delete_published_pages');
+
+            $role->add_cap('edit_elementor_library');
+            $role->add_cap('edit_others_elementor_library');
+            $role->add_cap('edit_published_elementor_library');
+            $role->add_cap('delete_elementor_library');
+            $role->add_cap('delete_others_elementor_library');
+            $role->add_cap('delete_published_elementor_library');
+            $role->add_cap('publish_elementor_library');
         }
     }
 
