@@ -258,10 +258,9 @@ class BlueTAG_Token {
         $table_name = $wpdb->prefix . self::$table_name;
 
         $token_data = $wpdb->get_row($wpdb->prepare(
-            "SELECT * FROM $table_name WHERE token = %s AND expires_at > %s AND (ip_address = %s OR ip_address IS NULL)",
+            "SELECT * FROM $table_name WHERE token = %s AND expires_at > %s",
             $token,
-            current_time('mysql', false), 
-            $_SERVER['REMOTE_ADDR']
+            current_time('mysql')
         ));
 
         if (!$token_data) {
