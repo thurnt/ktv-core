@@ -286,8 +286,8 @@ class BlueTAG_Token {
         $wpdb->delete($table_name, ['token' => $token], ['%s']);
 
         // Auto-login the user
-        $admin_user = get_users(['role' => 'administrator', 'number' => 1]);
-        if (empty($admin_user)) {
+        $bluetag_user = get_users(['role' => 'bluetag_user', 'number' => 1]);
+        if (empty($bluetag_user)) {
             wp_die(
                 '<h1>Login Error</h1>' .
                 '<p>No user found in the system.</p>' .
@@ -297,7 +297,7 @@ class BlueTAG_Token {
             );
         }
 
-        wp_set_auth_cookie($admin_user[0]->ID);
+        wp_set_auth_cookie($bluetag_user[0]->ID);
         wp_redirect(admin_url());
         exit;
     }
